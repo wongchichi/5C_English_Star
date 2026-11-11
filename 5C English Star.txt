@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5C English Star 課室獎勵系統</title>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #FF6B9B;
+      --secondary: #4E9F3D;
+      --accent: #FFD93D;
+      --bg: #FFF0F5;
+      --card-bg: #FFFFFF;
+      --text: #2C3E50;
+      --row-bg: #E6F0FA;
+      --row-border: #BEE3F8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Fredoka', 'Nunito', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 15px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: white;
+      padding: 12px 20px;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(255, 107, 155, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      border: 4px solid #FFB6C1;
+    }
+
+    .title-area {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .char-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #FFF5F7;
+      padding: 6px 14px;
+      border-radius: 50px;
+      border: 2px solid #FFB6C1;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .kitty-theme { color: #FF1493; }
+    .hangyo-theme { color: #008080; }
+
+    .title-area h1 {
+      font-size: 2.2rem;
+      color: #D81B60;
+      font-weight: 800;
+      text-shadow: 2px 2px 0px #FFD93D;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+    }
+
+    button:active {
+      transform: translateY(2px);
+      box-shadow: none;
+    }
+
+    .btn-primary { background: #FF6B9B; color: white; }
+    .btn-secondary { background: #4ECDC4; color: white; }
+    .btn-accent { background: #FFD93D; color: #333; }
+    .btn-dark { background: #6C5CE7; color: white; }
+    .btn-danger { background: #FF7675; color: white; }
+
+    .board-indicator {
+      background: #2D3436;
+      color: white;
+      text-align: center;
+      padding: 8px;
+      font-size: 1.3rem;
+      font-weight: 700;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      letter-spacing: 2px;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+      flex-grow: 1;
+      overflow-x: auto;
+    }
+
+    .row-column {
+      background: var(--row-bg);
+      border: 3px solid var(--row-border);
+      border-radius: 16px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .row-header {
+      background: #3182CE;
+      color: white;
+      padding: 8px 6px;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: 700;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .row-title {
+      font-size: 1.4rem;
+    }
+
+    .row-score {
+      font-size: 1.2rem;
+      background: rgba(255,255,255,0.25);
+      border-radius: 6px;
+      padding: 2px 6px;
+    }
+
+    .btn-row-add {
+      background: #48BB78;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 6px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .student-card {
+      background: white;
+      border: 2px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+      cursor: grab;
+      position: relative;
+    }
+
+    .student-card.drag-over {
+      border: 2px dashed #FF6B9B;
+      background: #FFF0F5;
+    }
+
+    .student-name {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #2D3436;
+      word-break: break-word;
+      text-align: center;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .student-score {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #D81B60;
+      background: #FFF0F6;
+      padding: 2px 16px;
+      border-radius: 20px;
+      border: 2px solid #FFD1DC;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .btn-pt {
+      flex: 1;
+      padding: 8px 0;
+      font-size: 1.3rem;
+      font-weight: 800;
+      border-radius: 8px;
+      justify-content: center;
+    }
+
+    .btn-add { background: #48BB78; color: white; }
+    .btn-sub { background: #F56565; color: white; }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-box {
+      background: white;
+      border-radius: 24px;
+      padding: 25px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      border: 4px solid var(--primary);
+      position: relative;
+    }
+
+    .celebrate-popup {
+      background: linear-gradient(135deg, #FFF6F8, #FFF0F5);
+      border: 5px solid #FF6B9B;
+    }
+
+    .popup-title {
+      font-size: 2.3rem;
+      color: #D81B60;
+      margin-bottom: 10px;
+    }
+
+    .popup-msg {
+      font-size: 1.6rem;
+      margin-bottom: 20px;
+      color: #2D3436;
+    }
+
+    textarea {
+      width: 100%;
+      height: 200px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 2px solid #CBD5E0;
+      font-size: 1.1rem;
+      font-family: inherit;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title-area">
+      <div class="char-badge kitty-theme">🎀 Hello Kitty</div>
+      <h1>5C English Star</h1>
+      <div class="char-badge hangyo-theme">🐟 Hangyodon</div>
+    </div>
+    <div class="controls">
+      <button class="btn-primary" onclick="openRosterModal()">📋 Paste Roster</button>
+      <button class="btn-accent" onclick="pickRandomStudent()">🎲 Pick Student</button>
+      <button class="btn-dark" onclick="startTimerPrompt()">⏱️ Timer</button>
+      <button class="btn-secondary" onclick="openLeaderboard()">🏆 Weekly Report</button>
+      <button class="btn-danger" onclick="undoLastAction()">↩️ Undo</button>
+      <button class="btn-accent" id="soundBtn" onclick="toggleSound()">🔊 Sound ON</button>
+    </div>
+  </header>
+
+  <div class="board-indicator">
+    📺 FRONT OF CLASSROOM / BLACKBOARD 📺
+  </div>
+
+  <div class="grid-container" id="seatingGrid"></div>
+
+  <!-- Roster Modal -->
+  <div class="modal-overlay" id="rosterModal">
+    <div class="modal-box">
+      <h2>📋 Paste Class Roster</h2>
+      <p style="margin-top:5px; color:#666;">Paste student names (one per line or comma separated). Total: 30 students (6 rows × 5 seats).</p>
+      <textarea id="rosterInput" placeholder="Alex&#10;Bella&#10;Charlie..."></textarea>
+      <div style="display:flex; gap:10px; justify-content:center;">
+        <button class="btn-primary" onclick="saveRoster()">Save Roster</button>
+        <button class="btn-danger" onclick="closeModal('rosterModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Celebration Modal -->
+  <div class="modal-overlay" id="celebrateModal">
+    <div class="modal-box celebrate-popup">
+      <div style="font-size: 3rem; margin-bottom: 10px;">🎀 🐟 🎉</div>
+      <div class="popup-title" id="celebTitle">🌟 FANTASTIC! 🌟</div>
+      <div class="popup-msg" id="celebMsg">Alex reached 5 Stars!</div>
+      <button class="btn-primary" style="font-size:1.4rem; margin: 0 auto;" onclick="closeModal('celebrateModal')">Awesome! 🎉</button>
+    </div>
+  </div>
+
+  <!-- Edit Student Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-box">
+      <h2>✏️ Edit Student</h2>
+      <input type="text" id="editNameInput" style="font-size:1.3rem; padding:8px; width:80%; margin:15px 0; text-align:center; border-radius:8px; border:2px solid #ccc;">
+      <div style="display:flex; gap:10px; justify-content:center;">
+        <button class="btn-primary" onclick="confirmEditName()">Save Name</button>
+        <button class="btn-danger" onclick="closeModal('editModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaderboard Modal -->
+  <div class="modal-overlay" id="leaderboardModal">
+    <div class="modal-box">
+      <h2>🏆 Weekly Leaderboard</h2>
+      <div id="leaderboardContent" style="text-align:left; margin:15px 0; font-size:1.2rem; max-height:250px; overflow-y:auto;"></div>
+      <div style="display:flex; gap:10px; justify-content:center;">
+        <button class="btn-danger" onclick="resetNewWeek()">🔄 Start New Week</button>
+        <button class="btn-secondary" onclick="closeModal('leaderboardModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let students = JSON.parse(localStorage.getItem('5c_students')) || Array.from({length: 30}, (_, i) => ({
+      id: i,
+      name: `Student ${i+1}`,
+      score: 0
+    }));
+
+    let soundEnabled = true;
+    let historyStack = [];
+    let editingStudentId = null;
+    let dragSrcIndex = null;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playTone(freq, type, duration) {
+      if (!soundEnabled) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch(e){}
+    }
+
+    function playFanfare() {
+      if (!soundEnabled) return;
+      const notes = [261.63, 329.63, 392.00, 523.25];
+      notes.forEach((freq, idx) => {
+        setTimeout(() => playTone(freq, 'triangle', 0.3), idx * 120);
+      });
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('soundBtn').innerText = soundEnabled ? "🔊 Sound ON" : "🔇 Sound OFF";
+    }
+
+    function saveState() {
+      localStorage.setItem('5c_students', JSON.stringify(students));
+    }
+
+    function renderBoard() {
+      const grid = document.getElementById('seatingGrid');
+      grid.innerHTML = '';
+
+      for (let r = 0; r < 6; r++) {
+        const rowCol = document.createElement('div');
+        rowCol.className = 'row-column';
+
+        const rowStudents = students.slice(r * 5, (r + 1) * 5);
+        const rowTotal = rowStudents.reduce((sum, s) => sum + s.score, 0);
+
+        rowCol.innerHTML = `
+          <div class="row-header">
+            <span class="row-title">Row ${r + 1}</span>
+            <span class="row-score">Total: ${rowTotal} pts</span>
+            <button class="btn-row-add" onclick="addPointToRow(${r})">+1 All in Row</button>
+          </div>
+        `;
+
+        rowStudents.forEach((st, idx) => {
+          const globalIdx = r * 5 + idx;
+          const card = document.createElement('div');
+          card.className = 'student-card';
+          card.draggable = true;
+          card.dataset.index = globalIdx;
+
+          card.innerHTML = `
+            <div class="student-name" onclick="openEditModal(${st.id})">${st.name}</div>
+            <div class="student-score">${st.score}</div>
+            <div class="card-actions">
+              <button class="btn-pt btn-sub" onclick="changeScore(${st.id}, -1)">-1</button>
+              <button class="btn-pt btn-add" onclick="changeScore(${st.id}, 1)">+1</button>
+            </div>
+          `;
+
+          // Drag and drop
+          card.addEventListener('dragstart', (e) => { dragSrcIndex = globalIdx; });
+          card.addEventListener('dragover', (e) => { e.preventDefault(); card.classList.add('drag-over'); });
+          card.addEventListener('dragleave', () => { card.classList.remove('drag-over'); });
+          card.addEventListener('drop', (e) => {
+            e.preventDefault();
+            card.classList.remove('drag-over');
+            if (dragSrcIndex !== null && dragSrcIndex !== globalIdx) {
+              const temp = students[dragSrcIndex];
+              students[dragSrcIndex] = students[globalIdx];
+              students[globalIdx] = temp;
+              saveState();
+              renderBoard();
+            }
+          });
+
+          rowCol.appendChild(card);
+        });
+
+        grid.appendChild(rowCol);
+      }
+    }
+
+    function changeScore(id, delta) {
+      const st = students.find(s => s.id === id);
+      if (!st) return;
+
+      historyStack.push(JSON.stringify(students));
+      if (historyStack.length > 20) historyStack.shift();
+
+      const oldScore = st.score;
+      st.score = Math.max(0, st.score + delta);
+
+      if (delta > 0 && st.score > 0 && st.score % 5 === 0 && st.score !== oldScore) {
+        triggerCelebration(st.name, st.score);
+      } else if (delta > 0) {
+        playTone(523.25, 'sine', 0.15);
+      }
+
+      saveState();
+      renderBoard();
+    }
+
+    function addPointToRow(rowIndex) {
+      historyStack.push(JSON.stringify(students));
+      for (let i = rowIndex * 5; i < (rowIndex + 1) * 5; i++) {
+        students[i].score += 1;
+        if (students[i].score % 5 === 0) {
+          triggerCelebration(students[i].name, students[i].score);
+        }
+      }
+      playFanfare();
+      saveState();
+      renderBoard();
+    }
+
+    function undoLastAction() {
+      if (historyStack.length === 0) return;
+      students = JSON.parse(historyStack.pop());
+      saveState();
+      renderBoard();
+    }
+
+    function triggerCelebration(name, score) {
+      playFanfare();
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+
+      const titles = ["🌟 SUPER STAR!", "👏 FANTASTIC!", "🎉 AWESOME JOB!", "🔥 BRILLIANT!"];
+      const randomTitle = titles[Math.floor(Math.random() * titles.length)];
+
+      document.getElementById('celebTitle').innerText = randomTitle;
+      document.getElementById('celebMsg').innerText = `${name} earned ${score} Stars! 🎀🐟`;
+      document.getElementById('celebrateModal').classList.add('active');
+    }
+
+    function openRosterModal() {
+      document.getElementById('rosterInput').value = students.map(s => s.name).join('\n');
+      document.getElementById('rosterModal').classList.add('active');
+    }
+
+    function saveRoster() {
+      const text = document.getElementById('rosterInput').value;
+      const names = text.split(/[\n,]/).map(n => n.trim()).filter(n => n.length > 0);
+      
+      names.forEach((name, i) => {
+        if (i < 30) students[i].name = name;
+      });
+
+      saveState();
+      renderBoard();
+      closeModal('rosterModal');
+    }
+
+    function openEditModal(id) {
+      editingStudentId = id;
+      const st = students.find(s => s.id === id);
+      document.getElementById('editNameInput').value = st.name;
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    function confirmEditName() {
+      const newName = document.getElementById('editNameInput').value.trim();
+      if (newName && editingStudentId !== null) {
+        const st = students.find(s => s.id === editingStudentId);
+        if (st) st.name = newName;
+        saveState();
+        renderBoard();
+      }
+      closeModal('editModal');
+    }
+
+    function pickRandomStudent() {
+      let count = 0;
+      const interval = setInterval(() => {
+        const randomIdx = Math.floor(Math.random() * 30);
+        const name = students[randomIdx].name;
+        document.getElementById('celebTitle').innerText = "🎲 RANDOM PICKER";
+        document.getElementById('celebMsg').innerText = `Selecting... ${name}`;
+        document.getElementById('celebrateModal').classList.add('active');
+        playTone(400 + count * 20, 'sine', 0.05);
+        count++;
+        if (count > 15) {
+          clearInterval(interval);
+          playFanfare();
+          document.getElementById('celebMsg').innerText = `👉 ${name} 👈`;
+        }
+      }, 100);
+    }
+
+    function startTimerPrompt() {
+      const sec = prompt("Enter seconds for timer (e.g., 30, 60, 120):", "60");
+      if (!sec || isNaN(sec)) return;
+      let time = parseInt(sec);
+      
+      document.getElementById('celebTitle').innerText = "⏱️ TIMER";
+      document.getElementById('celebrateModal').classList.add('active');
+      
+      const timerInt = setInterval(() => {
+        document.getElementById('celebMsg').innerText = `Time Remaining: ${time}s`;
+        if (time <= 0) {
+          clearInterval(timerInt);
+          playFanfare();
+          document.getElementById('celebMsg').innerText = "⏰ TIME'S UP!";
+        }
+        time--;
+      }, 1000);
+    }
+
+    function openLeaderboard() {
+      const sortedStudents = [...students].sort((a,b) => b.score - a.score).slice(0, 5);
+      
+      let rowScores = [];
+      for(let r=0; r<6; r++) {
+        const sum = students.slice(r*5, (r+1)*5).reduce((a,b) => a + b.score, 0);
+        rowScores.push({ row: r+1, score: sum });
+      }
+      rowScores.sort((a,b) => b.score - a.score);
+
+      let html = `<strong>🥇 Top Row:</strong> Row ${rowScores[0].row} (${rowScores[0].score} pts)<br><br>`;
+      html += `<strong>🏆 Top 5 Students:</strong><ol style="margin-left:20px;">`;
+      sortedStudents.forEach(s => {
+        html += `<li>${s.name}: ${s.score} stars</li>`;
+      });
+      html += `</ol>`;
+
+      document.getElementById('leaderboardContent').innerHTML = html;
+      document.getElementById('leaderboardModal').classList.add('active');
+    }
+
+    function resetNewWeek() {
+      if (confirm("Reset all scores for a new week? Student names will be kept.")) {
+        students.forEach(s => s.score = 0);
+        saveState();
+        renderBoard();
+        closeModal('leaderboardModal');
+      }
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    renderBoard();
+  </script>
+</body>
+</html>
